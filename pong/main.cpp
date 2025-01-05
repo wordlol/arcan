@@ -4,7 +4,7 @@
 
 #include "windows.h"
 
-// секция данных игры
+// секция данных игры  
 typedef struct {
     float x, y, width, height, rad, dx, dy, speed;
     HBITMAP hBitmap;//хэндл к спрайту шарика 
