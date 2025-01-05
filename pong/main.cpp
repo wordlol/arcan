@@ -7,7 +7,7 @@
 // секция данных игры
 typedef struct {
     float x, y, width, height, rad, dx, dy, speed;
-    HBITMAP hBitmap;//хэндл к спрайту шарика
+    HBITMAP hBitmap;//хэндл к спрайту шарика 
 } sprite;
 
 sprite racket;//ракетка игрока
