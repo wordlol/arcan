@@ -3,6 +3,7 @@
 //linker::input::additional dependensies Msimg32.lib; Winmm.lib
 
 #include "windows.h"
+#include "math.h"
 
 // секция данных игры  
 typedef struct {
@@ -13,6 +14,9 @@ typedef struct {
 sprite racket;//ракетка игрока
 sprite enemy;//ракетка противника
 sprite ball;//шарик
+const int bx = 20;
+const int by = 5;
+sprite bricks[bx][by];
 
 struct {
     int score, balls;//количество набранных очков и оставшихся "жизней"
@@ -50,15 +54,28 @@ void InitGame()
 
     ball.dy = (rand() % 65 + 35) / 100.;//формируем вектор полета шарика
     ball.dx = -(1 - ball.dy);//формируем вектор полета шарика
-    ball.speed = 11;
+    float lenght = sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+    ball.dy /= lenght;
+    ball.dx /= lenght;
+    ball.speed = 3;
     ball.rad = 20;
     ball.x = racket.x;//x координата шарика - на середие ракетки
     ball.y = racket.y - ball.rad;//шарик лежит сверху ракетки
 
     game.score = 0;
     game.balls = 9;
+    float brick_height = 20;
 
-   
+    for (int x = 0; x < bx; x++) {
+        for (int y = 0; y < by; y++) {
+            bricks[x][y].width = window.width / bx;
+            bricks[x][y].height = brick_height;
+            bricks[x][y].x = x * bricks[x][y].width;
+            bricks[x][y].y = 200 + y * brick_height;
+            bricks[x][y].hBitmap = enemy.hBitmap;
+
+        }
+    }
 }
 
 void ProcessSound(const char* name)//проигрывание аудиофайла в формате .wav, файл должен лежать в той же папке где и программа
@@ -138,7 +155,12 @@ void ShowRacketAndBall()
         //в этом случае, мы смешиваем координаты ракетки и шарика в пропорции 9 к 1
         enemy.x = ball.x * .1 + enemy.x * .9;
     }
+    for (int x = 0; x < bx; x++) {
+        for (int y = 0; y < by; y++) {
+            ShowBitmap(window.context, bricks[x][y].x, bricks[x][y].y,bricks[x][y].width,bricks[x][y].height, enemy.hBitmap);
 
+        }
+    }
     ShowBitmap(window.context, enemy.x - racket.width / 2, 0, racket.width, racket.height, enemy.hBitmap);//ракетка оппонента
     ShowBitmap(window.context, ball.x - ball.rad, ball.y - ball.rad, 2 * ball.rad, 2 * ball.rad, ball.hBitmap, true);// шарик
 }
@@ -169,16 +191,40 @@ void CheckRoof()
 
 bool tail = false;
 
+float sign(float x)
+{
+    if (x < 0) return -1;
+    return 1;
+}
+
 void CheckFloor()
 {
     if (ball.y > window.height - ball.rad - racket.height)//шарик пересек линию отскока - горизонталь ракетки
     {
-        if (!tail && ball.x >= racket.x - racket.width / 2. - ball.rad && ball.x <= racket.x + racket.width / 2. + ball.rad)//шарик отбит, и мы не в режиме обработки хвоста
+        if (!tail && ball.x >= racket.x - racket.width / 2. && ball.x <= racket.x + racket.width / 2. )//шарик отбит, и мы не в режиме обработки хвоста
         {
             game.score++;//за каждое отбитие даем одно очко
-            ball.speed += 5. / game.score;//но увеличиваем сложность - прибавляем скорости шарику
-            ball.dy *= -1;//отскок
+            ball.speed += 5. / game.score;//но увеличиваем сложность - прибавляем скорости 
             racket.width -= 10. / game.score;//дополнительно уменьшаем ширину ракетки - для сложности
+            float x1min = racket.x - racket.width / 2;
+            float x1max = racket.x - racket.width / 4;
+            float x3min = racket.x + racket.width / 4;
+            float x3max = racket.x + racket.width / 2;
+            if ((ball.x > x1min && ball.x < x1max) || (ball.x > x1min && ball.x < x1max)) {
+                auto dx = ball.dx;
+                auto dy = ball.dy;
+                ball.dy *= -0.25;
+                if (fabs(ball.dy) < 0.05) {
+                    ball.dy = 0.15 * sign(ball.dy);
+                }
+                float lenght = sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+                ball.dy /= lenght;
+                ball.dx /= lenght;
+
+                return;
+            }
+
+            ball.dy *= -1;
             ProcessSound("bounce.wav");//играем звук отскока
         }
         else
