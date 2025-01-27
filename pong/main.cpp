@@ -1,7 +1,9 @@
 #include "windows.h"
 
-int x = 0;
-int y = 0;
+HWND hWnd;
+
+int x = 555;
+int y = 555;
 int w = 100;
 int h = 100;
 
@@ -11,12 +13,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_ int       nCmdShow)
 {
     
-    HWND hWnd = CreateWindow("game", 0, WS_VISIBLE, x, y, w, h, 0, 0, 0, 0);
+    hWnd = CreateWindow("game", 0, WS_POPUP| WS_VISIBLE|WS_MAXIMIZE, 0, 0, 0, 0, 0, 0, 0, 0);
     UpdateWindow(hWnd);
     ShowWindow(hWnd, SW_SHOW);
 
     while (!GetAsyncKeyState(VK_ESCAPE))
     {
+        //SetWindowPos(hWnd, NULL, x, y, w, h, 0);
         ShowWindow(hWnd, SW_SHOW);
         Sleep(16);//ждем 16 милисекунд (1/количество кадров в секунду)
        
