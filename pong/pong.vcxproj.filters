@@ -32,6 +32,24 @@
     <Image Include="..\Debug\racket_enemy.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="..\Debug\axe.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Debug\hemlet.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Debug\loc0.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Debug\loc1.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Debug\loc2.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Debug\sword.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Media Include="..\Debug\bounce.wav">
