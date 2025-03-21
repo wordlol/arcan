@@ -124,7 +124,6 @@ void drawTriangle(Point3D p1, Point3D p2, Point3D p3)
 void Show()
 {
     drawBack();
-
     //SetPixel(window.context, 100, 100, RGB(255, 255, 255));
     HPEN hPenOld;
     HPEN hLinePen;
@@ -189,6 +188,8 @@ void InitGame()
 }
 
 
+//#define pause
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR    lpCmdLine,
@@ -204,6 +205,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         Show();//рисуем фон, ракетку и шарик
         BitBlt(window.device_context, 0, 0, window.width, window.height, window.context, 0, 0, SRCCOPY);//копируем буфер в окно
         Sleep(16);//ждем 16 милисекунд (1/количество кадров в секунду)
+
+#ifdef pause
+        while (!GetAsyncKeyState('P'))
+        {
+            Sleep(16);
+        }
+#endif
+
     }
 
 }
