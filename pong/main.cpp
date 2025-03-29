@@ -20,7 +20,7 @@ const int vertical = 5;
 sprite walls[horizont][vertical];
 
 struct {
-    int score, balls, x, xx, y, yy, z;//количество набранных очков и оставшихся "жизней"
+    int score, balls, x, xx, y, yy, z,w;//количество набранных очков и оставшихся "жизней"
     bool action = false;//состояние - ожидание (игрок должен нажать пробел) или игра
 } game;
 
@@ -46,7 +46,8 @@ void InitGame()
     hBack = (HBITMAP)LoadImageA(NULL, "back.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     //------------------------------------------------------
 
-    racket.width = 300;
+   // racket.width = 300;
+    racket.width = window.width; // **для теста
     racket.height = 50;
     racket.speed = 30;//скорость перемещения ракетки
     racket.x = window.width / 2.;//ракетка посередине окна
@@ -92,7 +93,7 @@ void ProcessSound(const char* name)//проигрывание аудиофайла в формате .wav, фай
 void ShowScore()
 {
     //поиграем шрифтами и цветами
-    SetTextColor(window.context, RGB(160, 160, 160));
+    SetTextColor(window.context, RGB(191, 180, 180));
     SetBkColor(window.context, RGB(0, 0, 0));
     SetBkMode(window.context, TRANSPARENT);
     auto hFont = CreateFont(70, 0, 0, 0, FW_BOLD, 0, 0, 0, 0, 0, 0, 2, 0, "CALIBRI");
@@ -107,25 +108,67 @@ void ShowScore()
     TextOutA(window.context, 10, 100, "Balls", 5);
     TextOutA(window.context, 200, 100, (LPCSTR)txt, strlen(txt));
 
+    _itoa_s(game.z, txt, 10);
+    TextOutA(window.context, 10, 250, "Side", 5);
+    TextOutA(window.context, 200, 250, (LPCSTR)txt, strlen(txt));
+
     _itoa_s(game.x, txt, 10);
-    TextOutA(window.context, 10, 150, "X", 5);
     TextOutA(window.context, 200, 150, (LPCSTR)txt, strlen(txt));
 
     _itoa_s(game.y, txt, 10);
-    TextOutA(window.context, 10, 200, "Y", 5);
     TextOutA(window.context, 200, 200, (LPCSTR)txt, strlen(txt));
 
-    _itoa_s(game.z, txt, 10);
-    TextOutA(window.context, 10, 250, "vect", 5);
-    TextOutA(window.context, 200, 250, (LPCSTR)txt, strlen(txt));
-
     _itoa_s(game.xx, txt, 10);
-
     TextOutA(window.context, 400, 150, (LPCSTR)txt, strlen(txt));
 
     _itoa_s(game.yy, txt, 10);
-
     TextOutA(window.context, 400, 200, (LPCSTR)txt, strlen(txt));
+
+}
+
+void ShowDevtool()
+{
+
+    SetTextColor(window.context, RGB(250, 65, 65));
+    SetBkColor(window.context, RGB(0, 0, 0));
+    SetBkMode(window.context, TRANSPARENT);
+    auto hFont = CreateFont(30, 0, 0, 0, FW_BOLD, 0, 0, 0, 0, 0, 0, 2, 0, "CALIBRI");
+    auto hTmp = (HFONT)SelectObject(window.context, hFont);
+    char txt[32];
+
+    POINT p;
+    if (GetCursorPos(&p))
+    {
+        game.y = window.height - p.y;
+        game.x = window.width - p.x;
+        game.yy = p.y;
+        game.xx = p.x;
+
+        for (int i = 0;i < window.width;i++)
+        {
+            _itoa_s(game.z, txt, 10);
+            TextOutA(window.context, i, p.y - 15, "-", 1);
+
+            _itoa_s(game.y, txt, 10);
+            TextOutA(window.context, p.x - 70, p.y+10, (LPCSTR)txt, strlen(txt));
+
+            _itoa_s(game.yy, txt, 10);
+            TextOutA(window.context, p.x+10, p.y+10, (LPCSTR)txt, strlen(txt));
+        }
+        for (int i = 0;i < window.height;i++)
+        {
+            _itoa_s(game.w, txt, 10);
+            TextOutA(window.context, p.x - 5, i, "|", 1);
+
+            _itoa_s(game.x, txt, 10);
+            TextOutA(window.context, p.x - 70, p.y - 50, (LPCSTR)txt, strlen(txt));
+
+            _itoa_s(game.xx, txt, 10);
+            TextOutA(window.context, p.x+10, p.y - 50, (LPCSTR)txt, strlen(txt));
+        }
+
+    }
+
 }
 
 void ProcessInput()
@@ -179,9 +222,7 @@ void ShowRacketAndBall()
             if (walls[i][ii].active == true)
             {
                 ShowBitmap(window.context, walls[i][ii].x, walls[i][ii].y, walls[i][ii].width, walls[i][ii].height, walls[i][ii].hBitmap);
-
             }
-
         }
     }
 
@@ -205,7 +246,6 @@ void CheckWalls()
 
 void CheckBricks()
 {
-
     for (int i = 0; i < horizont; i++)
     {
         for (int ii = 0; ii < vertical; ii++)
@@ -217,35 +257,33 @@ void CheckBricks()
                 ball.y < walls[i][ii].y + walls[i][ii].height
                 )
             {
+                
+                //это растояние от грани кирпичика до шара
+                int X_left = -1 * ((window.width - ball.x) - (window.width - walls[i][ii].x));
+                int X_right = ((window.width - ball.x) - (window.width - walls[i][ii].x - walls[i][ii].width));
+                int Y_up = -1 * ((window.height - ball.y) - (window.height - walls[i][ii].y));
+                int Y_down = ((window.height - ball.y) - (window.height - walls[i][ii].y - walls[i][ii].height));
+
+                if (X_left < X_right && X_left < Y_up && X_left < Y_down)
+                {
+                    game.z = 1; //прилет слева
+                }
+                if (X_right < X_left && X_right < Y_up && X_right < Y_down)
+                {
+                    game.z = 2; //прилет слева
+                }
+                if (Y_up < X_left && Y_up < X_right && Y_up < Y_down)
+                {
+                    game.z = 3; //прилет сверху
+                }
+                if (Y_down < X_left && Y_down < X_right && Y_down < Y_up)
+                {
+                    game.z = 4; //прилет снизу
+                }
                 walls[i][ii].active = false;
-
-                game.x = walls[i][ii].x - ball.x + walls[i][ii].width;
-                game.y = walls[i][ii].y - ball.y + walls[i][ii].height;
-
-                if (walls[i][ii].width / 2 > walls[i][ii].x - ball.x + walls[i][ii].width)
-                {
-                    game.z = 1; // шар летит справа 
-                }
-                else
-                {
-                    game.z = 2; // шар летит слева 
-                }
-
-                if (walls[i][ii].height / 2 > walls[i][ii].y - ball.y + walls[i][ii].height)
-                {
-                    game.z = 3; // шар летит снизу 
-                }
-                else
-                {
-                    game.z = 4; // шар летит сверху 
-                }
-
-
-
-
-                //ball.dy *= -1;
-
+                ball.dy *= -1;
                 game.score++;
+
             }
 
         }
@@ -275,8 +313,6 @@ void CheckFloor()
             ball.dy *= -1;//отскок
             racket.width -= 10. / game.score;//дополнительно уменьшаем ширину ракетки - для сложности
             ProcessSound("bounce.wav");//играем звук отскока
-
-
 
         }
         else
@@ -357,16 +393,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     InitGame();//здесь инициализируем переменные игры
 
     // mciSendString(TEXT("play ..\\Debug\\music.mp3 repeat"), NULL, 0, NULL);
-     //ShowCursor(NULL);
+    ShowCursor(NULL);
 
 
 
 
-
+     
     while (!GetAsyncKeyState(VK_ESCAPE))
     {
         ShowRacketAndBall();//рисуем фон, ракетку и шарик
         ShowScore();//рисуем очик и жизни
+
+       //ShowDevtool(); //отрисовка дополнительной информации
+
         BitBlt(window.device_context, 0, 0, window.width, window.height, window.context, 0, 0, SRCCOPY);//копируем буфер в окно
         Sleep(16);//ждем 16 милисекунд (1/количество кадров в секунду)
 
@@ -375,17 +414,5 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         ProcessBall();//перемещаем шарик
         ProcessRoom();//обрабатываем отскоки от стен и каретки, попадание шарика в картетку
 
-        POINT p;
-        if (GetCursorPos(&p))
-        {
-            game.y = p.y;
-            game.x = p.x;
-            game.yy = walls[0][0].y;
-            game.xx = walls[0][0].x;
-        }
-
-
-
     }
-
 }
