@@ -3,6 +3,7 @@
 //linker::input::additional dependensies Msimg32.lib; Winmm.lib
 
 #include "windows.h"
+#include "math.h"
 
 // секция данных игры  
 typedef struct {
@@ -70,6 +71,8 @@ void InitGame()
 
     //создание спрайтов блоков
     //enemy
+   
+
     for (int i = 0; i < horizont; i++)
     {
         for (int ii = 0; ii < vertical; ii++)
@@ -80,6 +83,7 @@ void InitGame()
             walls[i][ii].x = i * walls[i][ii].width;
             walls[i][ii].y = ii * walls[i][ii].height + window.height / 3;
             walls[i][ii].active = true;
+
         }
     }
 
@@ -169,6 +173,45 @@ void ShowDevtool()
 
     }
 
+   
+            int X = ball.dx * ball.speed;
+            int Y = ball.dy * ball.speed;
+            int C = sqrt(X*X + Y*Y);
+
+            for (int iii = 0; iii < 100; iii++)
+            {
+                int X_pixel = iii * X / C + ball.x;
+                int Y_pixel = iii * Y / C + ball.y;
+
+            for (int i = 0; i < horizont; i++)
+            {
+                for (int ii = 0; ii < vertical; ii++)
+                {
+                    if (walls[i][ii].active == true &&
+                        X_pixel > walls[i][ii].x &&
+                        X_pixel < walls[i][ii].x + walls[i][ii].width &&
+                        Y_pixel > walls[i][ii].y &&
+                        Y_pixel < walls[i][ii].y + walls[i][ii].height
+                        )
+                    {
+
+                       
+
+                        game.z = Y_pixel;
+                        SetPixel(window.context, X_pixel, Y_pixel, RGB(173, 3, 252));
+                         
+                    }
+                    else
+                    {
+                        
+
+
+                    }
+
+
+                    }
+                }
+            }
 }
 
 void ProcessInput()
@@ -244,9 +287,13 @@ void CheckWalls()
     }
 }
 
+
+
 void CheckBricks()
 {
-    for (int i = 0; i < horizont; i++)
+   
+
+    /*for (int i = 0; i < horizont; i++)
     {
         for (int ii = 0; ii < vertical; ii++)
         {
@@ -258,36 +305,34 @@ void CheckBricks()
                 )
             {
                 
-                //это растояние от грани кирпичика до шара
-                int X_left = -1 * ((window.width - ball.x) - (window.width - walls[i][ii].x));
-                int X_right = ((window.width - ball.x) - (window.width - walls[i][ii].x - walls[i][ii].width));
-                int Y_up = -1 * ((window.height - ball.y) - (window.height - walls[i][ii].y));
-                int Y_down = ((window.height - ball.y) - (window.height - walls[i][ii].y - walls[i][ii].height));
+                это растояние от грани кирпичика до шара
+                int X_left = ball.x - walls[i][ii].x;
+                int X_right = walls[i][ii].x + walls[i][ii].width - ball.x;
+                int Y_up = ball.y - walls[i][ii].y;
+                int Y_down = walls[i][ii].y + walls[i][ii].height - ball.y;
 
-                if (X_left < X_right && X_left < Y_up && X_left < Y_down)
+                int minX = min(X_left, X_right);
+                int minY = min(Y_up, Y_down);
+
+                if (minX < minY)
                 {
-                    game.z = 1; //прилет слева
+                    ball.dx *= -1;
                 }
-                if (X_right < X_left && X_right < Y_up && X_right < Y_down)
+                else
                 {
-                    game.z = 2; //прилет слева
+                    ball.dy *= -1;
                 }
-                if (Y_up < X_left && Y_up < X_right && Y_up < Y_down)
-                {
-                    game.z = 3; //прилет сверху
-                }
-                if (Y_down < X_left && Y_down < X_right && Y_down < Y_up)
-                {
-                    game.z = 4; //прилет снизу
-                }
+
                 walls[i][ii].active = false;
-                ball.dy *= -1;
                 game.score++;
-
+                return;
             }
 
         }
-    }
+    }*/
+
+    
+
 
 }
 
@@ -404,15 +449,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         ShowRacketAndBall();//рисуем фон, ракетку и шарик
         ShowScore();//рисуем очик и жизни
 
-       //ShowDevtool(); //отрисовка дополнительной информации
+       ShowDevtool(); //отрисовка дополнительной информации
 
-        BitBlt(window.device_context, 0, 0, window.width, window.height, window.context, 0, 0, SRCCOPY);//копируем буфер в окно
-        Sleep(16);//ждем 16 милисекунд (1/количество кадров в секунду)
 
         ProcessInput();//опрос клавиатуры
         LimitRacket();//проверяем, чтобы ракетка не убежала за экран
         ProcessBall();//перемещаем шарик
         ProcessRoom();//обрабатываем отскоки от стен и каретки, попадание шарика в картетку
+
+        BitBlt(window.device_context, 0, 0, window.width, window.height, window.context, 0, 0, SRCCOPY);//копируем буфер в окно
+        Sleep(16);//ждем 16 милисекунд (1/количество кадров в секунду)
+
 
     }
 }
