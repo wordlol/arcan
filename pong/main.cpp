@@ -173,45 +173,6 @@ void ShowDevtool()
 
     }
 
-   
-            int X = ball.dx * ball.speed;
-            int Y = ball.dy * ball.speed;
-            int C = sqrt(X*X + Y*Y);
-
-            for (int iii = 0; iii < 100; iii++)
-            {
-                int X_pixel = iii * X / C + ball.x;
-                int Y_pixel = iii * Y / C + ball.y;
-
-            for (int i = 0; i < horizont; i++)
-            {
-                for (int ii = 0; ii < vertical; ii++)
-                {
-                    if (walls[i][ii].active == true &&
-                        X_pixel > walls[i][ii].x &&
-                        X_pixel < walls[i][ii].x + walls[i][ii].width &&
-                        Y_pixel > walls[i][ii].y &&
-                        Y_pixel < walls[i][ii].y + walls[i][ii].height
-                        )
-                    {
-
-                       
-
-                        game.z = Y_pixel;
-                        SetPixel(window.context, X_pixel, Y_pixel, RGB(173, 3, 252));
-                         
-                    }
-                    else
-                    {
-                        
-
-
-                    }
-
-
-                    }
-                }
-            }
 }
 
 void ProcessInput()
@@ -287,11 +248,65 @@ void CheckWalls()
     }
 }
 
-
-
 void CheckBricks()
 {
    
+    int X = ball.dx * ball.speed;
+    int Y = ball.dy * ball.speed;
+    int C = sqrt(X * X + Y * Y);
+    int X_pixel;
+    int Y_pixel;
+
+    for (int iii = 0; iii < 200; iii++)
+    {
+        X_pixel = iii * X / C + ball.x;
+        Y_pixel = iii * Y / C + ball.y;
+         
+        if (Y_pixel > window.height - window.height / 3) //не доходит до границы снизу 720
+        {
+           SetPixel(window.context, X_pixel, Y_pixel, RGB(173, 3, 252));
+        }
+        else if (Y_pixel < (window.height - window.height / 3) / 2) //не доходит до границы сверху 360
+        {
+           SetPixel(window.context, X_pixel, Y_pixel, RGB(173, 3, 252));
+        }
+        else // доходит до одной из границ
+        {
+            for (int i = 0; i < 2000; i++) // отражение луча
+            {
+             
+             int Y_m = ball.y - Y_pixel;
+             int C_M = sqrt(X_pixel * X_pixel + Y_m * Y_m);
+
+             int  X_pixel_mirror = X_pixel + (X_pixel - ball.x) / C_M * i;
+             int  Y_pixel_mirror = Y_pixel + (ball.y - Y_pixel) / C_M * i;
+              
+            SetPixel(window.context, X_pixel_mirror, Y_pixel_mirror, RGB(173, 3, 252));
+
+            }
+
+            for (int i = 0; i < horizont; i++)
+            {
+                for (int ii = 0; ii < vertical; ii++)
+                {
+                    if (walls[i][ii].active == true && 
+                        walls[i][ii].y + walls[i][ii].height == Y_pixel ||
+                        walls[i][ii].y == Y_pixel
+                        )
+                    {
+                           // game.z = Y_pixel; //проверка координат
+                            
+
+                          //ball.dy *= -1;
+                            return;
+                    } 
+                }
+            }
+            return;
+        }
+    }
+    
+
 
     /*for (int i = 0; i < horizont; i++)
     {
@@ -449,7 +464,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         ShowRacketAndBall();//рисуем фон, ракетку и шарик
         ShowScore();//рисуем очик и жизни
 
-       ShowDevtool(); //отрисовка дополнительной информации
+       //ShowDevtool(); //отрисовка дополнительной информации
 
 
         ProcessInput();//опрос клавиатуры
