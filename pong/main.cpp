@@ -259,8 +259,10 @@ void CheckBricks()
 
     for (int iii = 0; iii < C*10; iii++)
     {
-        X_pixel = iii * X / C + ball.x;
-        Y_pixel = iii * Y / C + ball.y;
+        int iterator_back = (C*10 - iii);
+
+        X_pixel = iii * X / C + ball.x ;
+        Y_pixel = iii * Y / C + ball.y ;
           
         SetPixel(window.context, X_pixel, Y_pixel, RGB(173, 3, 252));
 
@@ -279,6 +281,7 @@ void CheckBricks()
                         int minX = min(X_pixel - walls[i][ii].x, walls[i][ii].x + walls[i][ii].width - X_pixel);
                         int minY = min(Y_pixel - walls[i][ii].y, walls[i][ii].y + walls[i][ii].height - Y_pixel);
                         
+
                         
                         if (minX < minY)
                         {
@@ -292,19 +295,35 @@ void CheckBricks()
                         {
                             if (Y_pixel - walls[i][ii].y < walls[i][ii].y + walls[i][ii].height - Y_pixel) // сверху
                             {
+                                
+                                    int posY_trace_in_brick;
+                                    int posX_trace_in_brick;
+
+                                    for (int Z = 0;Z < walls[i][ii].height;Z++)
+                                    {
+                                        for (int Zz = 0;Zz < walls[i][ii].width;Zz++)
+                                        {
+                                            if (walls[i][ii].x + Zz == X_pixel)
+                                            {
+                                                if (walls[i][ii].y + Z == Y_pixel)
+                                                {
+
+                                                    int posY_trace_in_brick = walls[i][ii].y + Z;
+                                                    int posX_trace_in_brick = walls[i][ii].x + Zz;
+
+                                                }
+                                            }
+                                        }
+                                    }
 
                                 int PointY_mirror = ball.y;
                                 int PointX_mirror = X_pixel - (ball.x - X_pixel);
+                                int C_M = sqrt(PointX_mirror * PointX_mirror + PointY_mirror * PointY_mirror);
 
-                                int Delta_PointX = PointX_mirror;
-                                int Delta_PointY = PointY_mirror;
-
-                                int C_M = sqrt(Delta_PointX * Delta_PointX + Delta_PointY * Delta_PointY);;
-                                int Mirror_pixelX = iii * Delta_PointX / C_M + X_pixel; // X_pixel сделать не зависящей от точки ball.x
-                                int Mirror_pixelY = iii * Delta_PointY / C_M + Y_pixel;
-
+                                int Mirror_pixelX = posX_trace_in_brick - iterator_back * PointX_mirror / C_M;
+                                int Mirror_pixelY = posY_trace_in_brick - iterator_back * PointY_mirror / C_M;
                                 SetPixel(window.context, Mirror_pixelX, Mirror_pixelY, RGB(75, 248, 42));
-                            
+                                
                             }
                             else // снизу
                             {
@@ -312,13 +331,13 @@ void CheckBricks()
                                 
 
                             }
-                            game.x = ball.x;
-                            game.y = ball.y;
+                          /*  game.x = ball.x;
+                            game.y = ball.y;*/
                                     
                             //ball.dy *= -1;
                         }
                            // game.z = Y_pixel; //проверка координат
-                         //  return;
+                         //return;
                     } 
                 }
             }
