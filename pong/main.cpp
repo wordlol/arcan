@@ -251,59 +251,78 @@ void CheckWalls()
 void CheckBricks()
 {
    
-    int X = ball.dx * ball.speed;
-    int Y = ball.dy * ball.speed;
-    int C = sqrt(X * X + Y * Y);
-    int X_pixel;
-    int Y_pixel;
+    float X = ball.dx * ball.speed;
+    float Y = ball.dy * ball.speed;
+    float C = sqrt(X * X + Y * Y);
+    float X_pixel;
+    float Y_pixel;
 
-    for (int iii = 0; iii < 200; iii++)
+    for (int iii = 0; iii < C*10; iii++)
     {
         X_pixel = iii * X / C + ball.x;
         Y_pixel = iii * Y / C + ball.y;
-         
-        if (Y_pixel > window.height - window.height / 3) //не доходит до границы снизу 720
-        {
-           SetPixel(window.context, X_pixel, Y_pixel, RGB(173, 3, 252));
-        }
-        else if (Y_pixel < (window.height - window.height / 3) / 2) //не доходит до границы сверху 360
-        {
-           SetPixel(window.context, X_pixel, Y_pixel, RGB(173, 3, 252));
-        }
-        else // доходит до одной из границ
-        {
-            for (int i = 0; i < 2000; i++) // отражение луча
-            {
-             
-             int Y_m = ball.y - Y_pixel;
-             int C_M = sqrt(X_pixel * X_pixel + Y_m * Y_m);
-
-             int  X_pixel_mirror = X_pixel + (X_pixel - ball.x) / C_M * i;
-             int  Y_pixel_mirror = Y_pixel + (ball.y - Y_pixel) / C_M * i;
-              
-            SetPixel(window.context, X_pixel_mirror, Y_pixel_mirror, RGB(173, 3, 252));
-
-            }
+          
+        SetPixel(window.context, X_pixel, Y_pixel, RGB(173, 3, 252));
 
             for (int i = 0; i < horizont; i++)
             {
                 for (int ii = 0; ii < vertical; ii++)
                 {
-                    if (walls[i][ii].active == true && 
-                        walls[i][ii].y + walls[i][ii].height == Y_pixel ||
-                        walls[i][ii].y == Y_pixel
+                    if (walls[i][ii].active &&
+                        X_pixel > walls[i][ii].x &&
+                        X_pixel < walls[i][ii].x + walls[i][ii].width &&
+                        Y_pixel > walls[i][ii].y &&
+                        Y_pixel < walls[i][ii].y + walls[i][ii].height
                         )
                     {
-                           // game.z = Y_pixel; //проверка координат
+
+                        int minX = min(X_pixel - walls[i][ii].x, walls[i][ii].x + walls[i][ii].width - X_pixel);
+                        int minY = min(Y_pixel - walls[i][ii].y, walls[i][ii].y + walls[i][ii].height - Y_pixel);
+                        
+                        
+                        if (minX < minY)
+                        {
+                            
                             
 
-                          //ball.dy *= -1;
-                            return;
+                           
+                            //ball.dx *= -1;
+                        }
+                        else
+                        {
+                            if (Y_pixel - walls[i][ii].y < walls[i][ii].y + walls[i][ii].height - Y_pixel) // сверху
+                            {
+
+                                int PointY_mirror = ball.y;
+                                int PointX_mirror = X_pixel - (ball.x - X_pixel);
+
+                                int Delta_PointX = PointX_mirror;
+                                int Delta_PointY = PointY_mirror;
+
+                                int C_M = sqrt(Delta_PointX * Delta_PointX + Delta_PointY * Delta_PointY);;
+                                int Mirror_pixelX = iii * Delta_PointX / C_M + X_pixel; // X_pixel сделать не зависящей от точки ball.x
+                                int Mirror_pixelY = iii * Delta_PointY / C_M + Y_pixel;
+
+                                SetPixel(window.context, Mirror_pixelX, Mirror_pixelY, RGB(75, 248, 42));
+                            
+                            }
+                            else // снизу
+                            {
+
+                                
+
+                            }
+                            game.x = ball.x;
+                            game.y = ball.y;
+                                    
+                            //ball.dy *= -1;
+                        }
+                           // game.z = Y_pixel; //проверка координат
+                         //  return;
                     } 
                 }
             }
-            return;
-        }
+
     }
     
 
@@ -423,7 +442,7 @@ void ProcessBall()
     else
     {
         //иначе - шарик "приклеен" к ракетке
-        ball.x = racket.x;
+      //  ball.x = racket.x;
     }
 }
 
@@ -461,6 +480,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
      
     while (!GetAsyncKeyState(VK_ESCAPE))
     {
+        POINT p;
+        GetCursorPos(&p);
+        ScreenToClient(window.hWnd, &p);
+        ball.x = p.x;
+        ball.y = p.y;
+
         ShowRacketAndBall();//рисуем фон, ракетку и шарик
         ShowScore();//рисуем очик и жизни
 
