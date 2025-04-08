@@ -252,7 +252,7 @@ void CheckWalls()
 void MirrorTracer(float C, int Multi_size, float X_pixel , float Y_pixel , int indicator)
 {
 
-    //шар летит в левую сторону снизу и отражается влево вверх
+    //отражается вправа вверх
     if (indicator == 1)
     {
         for (int ite = 0; ite < C * Multi_size; ite++)
@@ -263,12 +263,13 @@ void MirrorTracer(float C, int Multi_size, float X_pixel , float Y_pixel , int i
             int PointX_mirror = X_pixel - (ball.x - X_pixel);
             int C_M = sqrt(PointX_mirror * PointX_mirror + PointY_mirror * PointY_mirror);
 
-            int Mirror_pixelX = X_pixel - iterator_back * PointX_mirror / C_M;
+            int Mirror_pixelX = X_pixel + iterator_back * PointX_mirror / C_M;
             int Mirror_pixelY = Y_pixel - iterator_back * PointY_mirror / C_M;
             SetPixel(window.context, Mirror_pixelX, Mirror_pixelY, RGB(75, 248, 42));
         }
     } 
-    //шар летит в правую сторону сверху и отражается вправа сниз
+
+    //отражается вправа вниз
     if (indicator == 2)
     {
         for (int ite = 0; ite < C * Multi_size; ite++)
@@ -284,7 +285,9 @@ void MirrorTracer(float C, int Multi_size, float X_pixel , float Y_pixel , int i
             SetPixel(window.context, Mirror_pixelX, Mirror_pixelY, RGB(75, 248, 42));
         }
     }
-    //шар летит вниз в верхнюю сторону и отражается в лева вверх
+
+
+    //отражается влева вверх
     if (indicator == 3) 
     {
         for (int ite = 0; ite < C * Multi_size; ite++)
@@ -300,7 +303,8 @@ void MirrorTracer(float C, int Multi_size, float X_pixel , float Y_pixel , int i
             SetPixel(window.context, Mirror_pixelX, Mirror_pixelY, RGB(75, 248, 42));
         }
     } 
-    //шар летит вверх в нижнюю сторону и отражается в лева вниз
+
+    //отражается влева низ
     if (indicator == 4)
     {
         for (int ite = 0; ite < C * Multi_size; ite++)
@@ -354,29 +358,37 @@ void CheckBricks()
                         
                         if (minX < minY)
                         {
-                            // нужны еще условия когда у шара меняется направление движения
-                            if (X_pixel - walls[i][ii].x < walls[i][ii].x + walls[i][ii].width - X_pixel) 
-                            {
-                                MirrorTracer(C, Multi_size, X_pixel, Y_pixel, 1); // слева
-                            }
-                            else 
-                            {
-                                MirrorTracer(C, Multi_size, X_pixel, Y_pixel, 2); // вправа
-                            }
-
+                            
+                                                           
                             //ball.dx *= -1;
                         }
                         else
                         {
-                            if (Y_pixel - walls[i][ii].y < walls[i][ii].y + walls[i][ii].height - Y_pixel)
-                            {
-                                MirrorTracer(C, Multi_size, X_pixel, Y_pixel, 3); // сверху
-                            }
-                            else
-                            {
-                                MirrorTracer(C, Multi_size, X_pixel, Y_pixel, 4); // снизу
-                            }
-                               
+                                if (X_pixel > ball.x) //определяет направление движение шара по x
+                                {
+                                    if (Y_pixel > ball.y) //определяет направление движение шара по y
+                                    {
+                                        MirrorTracer(C, Multi_size, X_pixel, Y_pixel, 1);//в отражение права вверх
+                                    }
+                                    else
+                                    {
+                                        MirrorTracer(C, Multi_size, X_pixel, Y_pixel, 2);//в отражение права низ
+                                    }
+                                }
+                                else
+                                {
+                                    
+                                    if (Y_pixel > ball.y) //определяет направление движение шара по y
+                                    {
+                                        MirrorTracer(C, Multi_size, X_pixel, Y_pixel, 3);//в отражение лево вверх
+                                    }
+                                    else
+                                    {
+                                        MirrorTracer(C, Multi_size, X_pixel, Y_pixel, 4);//в отражение лево низ
+                                    }
+                                }
+                            
+
                              // ball.dy *= -1;
                         }
                          return;
