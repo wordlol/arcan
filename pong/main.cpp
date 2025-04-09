@@ -4,6 +4,9 @@
 
 #include "windows.h"
 #include "math.h"
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 
 // секция данных игры  
 typedef struct {
@@ -249,6 +252,53 @@ void CheckWalls()
 }
 
 
+void Circle(int x, int y, int R, int x_pixel, int y_pixel)
+{
+    int x1;
+    int y1;
+    for (float i = 0.; i <= 360; i++)
+    {
+            x1 = R * cos(i) + x;
+            y1 = R * sin(i) + y;
+
+            if (x1 == x_pixel &&
+                y1 == y_pixel
+                ) // нахождении точки пересечения от центра до края шара + ее векторное положение от центра
+            {
+             SetPixel(window.context, x1, y1, RGB(255, 255, 255)); // отрисока точки на радиусе шара и луча
+             
+             float x2 = R * cos(i + M_PI/2) + x; //точки +90 градусов
+             float y2 = R * sin(i + M_PI/2) + y;
+             SetPixel(window.context, x2, y2, RGB(255, 0, 255));
+
+             float dx = x - x2;
+             float dy = y - y2;
+
+             for (float ii = 0.; ii < R*2; ii++) // отрисовка линии под 90 градусов
+             {
+                float X_pixel = ii * dx / R + x2;
+                float Y_pixel = ii * dy / R + y2;
+                 SetPixel(window.context, X_pixel, Y_pixel, RGB(255, 255, 255));
+
+                 //здесь отрисовывать дополнительные лучи от это линии
+
+
+
+
+
+
+
+
+             }
+
+
+
+            }
+    }
+       
+}
+
+
 void CheckBricks()
 {
     float bx = ball.x;
@@ -259,16 +309,17 @@ void CheckBricks()
     float X_pixel;
     float Y_pixel;
     int Multi_size = 10;
-
-    for (int iii = 0; iii < C* Multi_size; iii++)
+    
+ 
+    for (int iii = 0; iii < C * Multi_size; iii++)
     {
         
         X_pixel = iii * X / C + bx;
         Y_pixel = iii * Y / C + by;
-          
-        SetPixel(window.context, X_pixel, Y_pixel, RGB(173, 3, 252));
 
-            for (int i = 0; i < horizont; i++)
+        SetPixel(window.context, X_pixel, Y_pixel, RGB(255, 255, 252));
+        Circle(bx, by, ball.rad, X_pixel, Y_pixel);
+        for (int i = 0; i < horizont; i++)
             {
                 for (int ii = 0; ii < vertical; ii++)
                 {
@@ -285,31 +336,24 @@ void CheckBricks()
                         
                         if (minX < minY)
                         {
-                            
                             bx -= -(X_pixel - bx)*2;
-                            X *= -1;                            
+                            X *= -1;     
                             //ball.dx *= -1;
                         }
                         else
                         {
-                              
                              by -= -(Y_pixel - by)*2;
                              Y *= -1;
                              // ball.dy *= -1;
                         }
-                         
+                        
                     } 
-                    else
-                    {
-                      SetPixel(window.context, X_pixel, Y_pixel, RGB(173, 3, 252));
-                    }
 
                 }
             }
 
     }
     
-
 }
 
 void CheckRoof()
@@ -422,12 +466,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
      
     while (!GetAsyncKeyState(VK_ESCAPE))
     {
+        
         POINT p;
         GetCursorPos(&p);
         ScreenToClient(window.hWnd, &p);
         ball.x = p.x;
         ball.y = p.y;
-
+        
         ShowRacketAndBall();//рисуем фон, ракетку и шарик
         ShowScore();//рисуем очик и жизни
 
