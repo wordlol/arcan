@@ -249,83 +249,10 @@ void CheckWalls()
 }
 
 
-void MirrorTracer(float C, int Multi_size, float X_pixel , float Y_pixel , int indicator)
-{
-
-    //отражается вправа вверх
-    if (indicator == 1)
-    {
-        for (int ite = 0; ite < C * Multi_size; ite++)
-        {
-            int iterator_back = (C * Multi_size - ite);
-
-            int PointY_mirror = ball.y;
-            int PointX_mirror = X_pixel - (ball.x - X_pixel);
-            int C_M = sqrt(PointX_mirror * PointX_mirror + PointY_mirror * PointY_mirror);
-
-            int Mirror_pixelX = X_pixel + iterator_back * PointX_mirror / C_M;
-            int Mirror_pixelY = Y_pixel - iterator_back * PointY_mirror / C_M;
-            SetPixel(window.context, Mirror_pixelX, Mirror_pixelY, RGB(75, 248, 42));
-        }
-    } 
-
-    //отражается вправа вниз
-    if (indicator == 2)
-    {
-        for (int ite = 0; ite < C * Multi_size; ite++)
-        {
-            int iterator_back = (C * Multi_size - ite);
-
-            int PointY_mirror = ball.y;
-            int PointX_mirror = X_pixel - (ball.x - X_pixel);
-            int C_M = sqrt(PointX_mirror * PointX_mirror + PointY_mirror * PointY_mirror);
-
-            int Mirror_pixelX = X_pixel + iterator_back * PointX_mirror / C_M;
-            int Mirror_pixelY = Y_pixel + iterator_back * PointY_mirror / C_M;
-            SetPixel(window.context, Mirror_pixelX, Mirror_pixelY, RGB(75, 248, 42));
-        }
-    }
-
-
-    //отражается влева вверх
-    if (indicator == 3) 
-    {
-        for (int ite = 0; ite < C * Multi_size; ite++)
-        {
-            int iterator_back = (C * Multi_size - ite);
-
-            int PointY_mirror = ball.y;
-            int PointX_mirror = X_pixel - (ball.x - X_pixel);
-            int C_M = sqrt(PointX_mirror * PointX_mirror + PointY_mirror * PointY_mirror);
-
-            int Mirror_pixelX = X_pixel - iterator_back * PointX_mirror / C_M;
-            int Mirror_pixelY = Y_pixel - iterator_back * PointY_mirror / C_M;
-            SetPixel(window.context, Mirror_pixelX, Mirror_pixelY, RGB(75, 248, 42));
-        }
-    } 
-
-    //отражается влева низ
-    if (indicator == 4)
-    {
-        for (int ite = 0; ite < C * Multi_size; ite++)
-        {
-            int iterator_back = (C * Multi_size - ite);
-
-            int PointY_mirror = ball.y;
-            int PointX_mirror = X_pixel - (ball.x - X_pixel);
-            int C_M = sqrt(PointX_mirror * PointX_mirror + PointY_mirror * PointY_mirror);
-
-            int Mirror_pixelX = X_pixel - iterator_back * PointX_mirror / C_M;
-            int Mirror_pixelY = Y_pixel + iterator_back * PointY_mirror / C_M;
-            SetPixel(window.context, Mirror_pixelX, Mirror_pixelY, RGB(75, 248, 42));
-        }
-    }
-
-}
-
 void CheckBricks()
 {
-   
+    float bx = ball.x;
+    float by = ball.y;
     float X = ball.dx * ball.speed;
     float Y = ball.dy * ball.speed;
     float C = sqrt(X * X + Y * Y);
@@ -336,8 +263,8 @@ void CheckBricks()
     for (int iii = 0; iii < C* Multi_size; iii++)
     {
         
-        X_pixel = iii * X / C + ball.x ;
-        Y_pixel = iii * Y / C + ball.y ;
+        X_pixel = iii * X / C + bx;
+        Y_pixel = iii * Y / C + by;
           
         SetPixel(window.context, X_pixel, Y_pixel, RGB(173, 3, 252));
 
@@ -359,39 +286,18 @@ void CheckBricks()
                         if (minX < minY)
                         {
                             
-                                                           
+                            bx -= -(X_pixel - bx)*2;
+                            X *= -1;                            
                             //ball.dx *= -1;
                         }
                         else
                         {
-                                if (X_pixel > ball.x) //определяет направление движение шара по x
-                                {
-                                    if (Y_pixel > ball.y) //определяет направление движение шара по y
-                                    {
-                                        MirrorTracer(C, Multi_size, X_pixel, Y_pixel, 1);//в отражение права вверх
-                                    }
-                                    else
-                                    {
-                                        MirrorTracer(C, Multi_size, X_pixel, Y_pixel, 2);//в отражение права низ
-                                    }
-                                }
-                                else
-                                {
-                                    
-                                    if (Y_pixel > ball.y) //определяет направление движение шара по y
-                                    {
-                                        MirrorTracer(C, Multi_size, X_pixel, Y_pixel, 3);//в отражение лево вверх
-                                    }
-                                    else
-                                    {
-                                        MirrorTracer(C, Multi_size, X_pixel, Y_pixel, 4);//в отражение лево низ
-                                    }
-                                }
-                            
-
+                              
+                             by -= -(Y_pixel - by)*2;
+                             Y *= -1;
                              // ball.dy *= -1;
                         }
-                         return;
+                         
                     } 
                     else
                     {
@@ -403,46 +309,6 @@ void CheckBricks()
 
     }
     
-    //for (int i = 0; i < horizont; i++)
-    //{
-    //    for (int ii = 0; ii < vertical; ii++)
-    //    {
-    //        if (walls[i][ii].active == true &&
-    //            ball.x > walls[i][ii].x &&
-    //            ball.x < walls[i][ii].x + walls[i][ii].width &&
-    //            ball.y > walls[i][ii].y &&
-    //            ball.y < walls[i][ii].y + walls[i][ii].height
-    //            )
-    //        {
-    //            
-    //           /* это растояние от грани кирпичика до шара*/
-    //            int X_left = ball.x - walls[i][ii].x;
-    //            int X_right = walls[i][ii].x + walls[i][ii].width - ball.x;
-    //            int Y_up = ball.y - walls[i][ii].y;
-    //            int Y_down = walls[i][ii].y + walls[i][ii].height - ball.y;
-
-    //            int minX = min(X_left, X_right);
-    //            int minY = min(Y_up, Y_down);
-
-    //            if (minX < minY)
-    //            {
-    //                ball.dx *= -1;
-    //            }
-    //            else
-    //            {
-    //                ball.dy *= -1;
-    //            }
-
-    //            walls[i][ii].active = false;
-    //            game.score++;
-    //            return;
-    //        }
-
-    //    }
-    //}
-
-    
-
 
 }
 
