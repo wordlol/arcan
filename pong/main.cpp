@@ -67,7 +67,7 @@ void InitGame()
     ball.y = racket.y - ball.rad;//шарик лежит сверху ракетки
 
     game.score = 0;
-    game.balls = 9;
+    game.balls = 0;
     game.x = 0;
     game.y = 0;
     game.z = 0;
@@ -252,6 +252,25 @@ void CheckWalls()
 }
 
 
+void Paint_line(
+    float start_x, float start_y,
+    float iterator,
+    float x1,  float y1, 
+    float x2, float y2, 
+    float *Poxel_x, 
+    float *Poxel_y, 
+    int R , int G , int B)
+{
+    float dx = x2 - x1;
+    float dy = y2 - y1;
+    float C;
+    C = sqrt(pow(dx, 2) + pow(dy, 2));
+    
+    (*Poxel_x) = iterator * dx / C + start_x;
+    (*Poxel_y) = iterator * dy / C + start_y;
+    SetPixel(window.context, *Poxel_x, *Poxel_y, RGB(R, G, B));
+}
+
 void Circle(int x, int y, int R, int x_pixel, int y_pixel)
 {
     int x1;
@@ -261,38 +280,67 @@ void Circle(int x, int y, int R, int x_pixel, int y_pixel)
             x1 = R * cos(i) + x;
             y1 = R * sin(i) + y;
 
+            int x2_round = R * cos(i) + x_pixel;
+            int y2_round = R * sin(i) + y_pixel;
+
             if (x1 == x_pixel &&
                 y1 == y_pixel
-                ) // нахождении точки пересечения от центра до края шара + ее векторное положение от центра
+                ) // нахождении точки пересечения от луча до края шара
             {
              SetPixel(window.context, x1, y1, RGB(255, 255, 255)); // отрисока точки на радиусе шара и луча
              
-             float x2 = R * cos(i + M_PI/2) + x; //точки +90 градусов
+             float x2 = R * cos(i + M_PI/2) + x;
              float y2 = R * sin(i + M_PI/2) + y;
-             SetPixel(window.context, x2, y2, RGB(255, 0, 255));
 
-             float dx = x - x2;
-             float dy = y - y2;
+             float x3_round = R * cos(i + M_PI / 2) + x_pixel;
+             float y3_round = R * sin(i + M_PI / 2) + y_pixel;
 
-             for (float ii = 0.; ii < R*2; ii++) // отрисовка линии под 90 градусов
+             SetPixel(window.context, x2, y2, RGB(255, 0, 255)); //точки 90 градусов
+
+             SetPixel(window.context, x3_round, y3_round, RGB(255, 0, 255)); //точки 90 градусов от точки луча
+
+             for (float ii = 0.; ii < R*2; ii++)
              {
-                float X_pixel = ii * dx / R + x2;
-                float Y_pixel = ii * dy / R + y2;
-                 SetPixel(window.context, X_pixel, Y_pixel, RGB(255, 255, 255));
 
-                 //здесь отрисовывать дополнительные лучи от это линии
+              float Poxel_x1;
+              float Poxel_y1;
+              Paint_line(
+                  x2, y2, 
+                  ii, 
+                  x2, y2, 
+                  x, y, 
+                  &Poxel_x1, &Poxel_y1, 
+                  255,255,255); // отрисовка линии под 90 градусов от точки x1y1
+
+              float Poxel_x2;
+              float Poxel_y2;
+              Paint_line(
+                  x3_round, y3_round,
+                  ii, 
+                  x3_round, y3_round,
+                  x_pixel, y_pixel,
+                  &Poxel_x2, &Poxel_y2,
+                  255,0,255); // отрисовка линии от точки x3x3 до точки x_p y_p
+
+
+              for (float iii = 0.; iii < R*6; iii++)
+              {
+                  float Poxel_x3;
+                  float Poxel_y3;
+                  Paint_line(
+                      Poxel_x1, Poxel_y1,
+                      iii,
+                      Poxel_x1, Poxel_y1,
+                      Poxel_x2, Poxel_y2,
+                      &Poxel_x3, &Poxel_y3,
+                      0, 255, 0); // отрисовка линии от точки x3x3 до точки x_p y_p
+              }
 
 
 
 
-
-
-
-
-             }
-
-
-
+                 
+              }
             }
     }
        
