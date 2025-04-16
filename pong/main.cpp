@@ -10,7 +10,7 @@
 
 // секция данных игры  
 typedef struct {
-    float x, y, width, height, rad, dx, dy, speed;
+    float x, y, width, height, rad, dx, dy, speed, dx_core,dy_core;
     HBITMAP hBitmap;//хэндл к спрайту шарика 
     bool active;
 } sprite;
@@ -24,7 +24,8 @@ const int vertical = 5;
 sprite walls[horizont][vertical];
 
 struct {
-    int score, balls, x, xx, y, yy, z,w;//количество набранных очков и оставшихся "жизней"
+    int score, balls, x, xx, y, yy,w;//количество набранных очков и оставшихся "жизней"
+    float z;
     bool action = false;//состояние - ожидание (игрок должен нажать пробел) или игра
 } game;
 
@@ -61,7 +62,11 @@ void InitGame()
 
     ball.dy = (rand() % 65 + 35) / 100.;//формируем вектор полета шарика
     ball.dx = -(1 - ball.dy);//формируем вектор полета шарика
-    ball.speed = 11;
+
+    ball.dy_core = (rand() % 65 + 35) / 100.;
+    ball.dx_core = -(1 - ball.dy_core);
+
+    ball.speed = 111;
     ball.rad = 20;
     ball.x = racket.x;//x координата шарика - на середие ракетки
     ball.y = racket.y - ball.rad;//шарик лежит сверху ракетки
@@ -271,81 +276,74 @@ void Paint_line(
     SetPixel(window.context, *Poxel_x, *Poxel_y, RGB(R, G, B));
 }
 
-void Circle(int x, int y, int R, int x_pixel, int y_pixel)
+int lastCheckX;
+int lastCheckY;
+
+bool cb(float &x1, float &y1, float &bx , float &by,float &X , float &Y,int iii,int C)
 {
-    int x1;
-    int y1;
-    for (float i = 0.; i <= 360; i++)
+    for (int i = 0; i < horizont; i++)
     {
-            x1 = R * cos(i) + x;
-            y1 = R * sin(i) + y;
+        for (int ii = 0; ii < vertical; ii++)
+        {
 
-            int x2_round = R * cos(i) + x_pixel;
-            int y2_round = R * sin(i) + y_pixel;
-
-            if (x1 == x_pixel &&
-                y1 == y_pixel
-                ) // нахождении точки пересечения от луча до края шара
+            if (!(lastCheckX == i && lastCheckY == ii))
             {
-             SetPixel(window.context, x1, y1, RGB(255, 255, 255)); // отрисока точки на радиусе шара и луча
-             
-             float x2 = R * cos(i + M_PI/2) + x;
-             float y2 = R * sin(i + M_PI/2) + y;
 
-             float x3_round = R * cos(i + M_PI / 2) + x_pixel;
-             float y3_round = R * sin(i + M_PI / 2) + y_pixel;
+                if (walls[i][ii].active &&
+                    x1 > walls[i][ii].x &&
+                    x1 < walls[i][ii].x + walls[i][ii].width &&
+                    y1 > walls[i][ii].y &&
+                    y1 < walls[i][ii].y + walls[i][ii].height
+                    )
+                {
+                    int left = x1 - walls[i][ii].x;
+                    int right = walls[i][ii].x + walls[i][ii].width - x1;
+                    int minX = min(left, right);
 
-             SetPixel(window.context, x2, y2, RGB(255, 0, 255)); //точки 90 градусов
+                    int top = y1 - walls[i][ii].y;
+                    int bottom = walls[i][ii].y + walls[i][ii].height - y1;
+                    int minY = min(top, bottom);
 
-             SetPixel(window.context, x3_round, y3_round, RGB(255, 0, 255)); //точки 90 градусов от точки луча
+                    if (minX < minY)
+                    {
+                        bx -= -(x1 - bx) * 2;
+                        X *= -1;
+                   
+                        //ball.dx *= -1;
+                    }
+                    else
+                    {
+                        by -= -(y1 - by) * 2;
+                        Y *= -1;
+                       
+                        //ball.dy *= -1;
+                    }
 
-             for (float ii = 0.; ii < R*2; ii++)
-             {
+                    lastCheckX = i;
+                    lastCheckY = ii;
 
-              float Poxel_x1;
-              float Poxel_y1;
-              Paint_line(
-                  x2, y2, 
-                  ii, 
-                  x2, y2, 
-                  x, y, 
-                  &Poxel_x1, &Poxel_y1, 
-                  255,255,255); // отрисовка линии под 90 градусов от точки x1y1
+                    if (iii <= C - 1)
+                    {
+                        for (float i = 0.; i < 360; i++)
+                        {
+                            float X_pixel = iii * X / C + bx;
+                            float Y_pixel = iii * Y / C + by;
 
-              float Poxel_x2;
-              float Poxel_y2;
-              Paint_line(
-                  x3_round, y3_round,
-                  ii, 
-                  x3_round, y3_round,
-                  x_pixel, y_pixel,
-                  &Poxel_x2, &Poxel_y2,
-                  255,0,255); // отрисовка линии от точки x3x3 до точки x_p y_p
+                            float x2 = ball.rad * cos(i) + X_pixel;
+                            float y2 = ball.rad * sin(i) + Y_pixel;
+                            SetPixel(window.context, x2, y2, RGB(255, 0, 0));
 
+                        }
+                    }
 
-              for (float iii = 0.; iii < R*6; iii++)
-              {
-                  float Poxel_x3;
-                  float Poxel_y3;
-                  Paint_line(
-                      Poxel_x1, Poxel_y1,
-                      iii,
-                      Poxel_x1, Poxel_y1,
-                      Poxel_x2, Poxel_y2,
-                      &Poxel_x3, &Poxel_y3,
-                      0, 255, 0); // отрисовка линии от точки x3x3 до точки x_p y_p
-              }
-
-
-
-
-                 
-              }
+                    return true;
+                }
             }
-    }
-       
-}
 
+        }
+    }
+    return false;
+}
 
 void CheckBricks()
 {
@@ -356,50 +354,33 @@ void CheckBricks()
     float C = sqrt(X * X + Y * Y);
     float X_pixel;
     float Y_pixel;
-    int Multi_size = 10;
+
+    lastCheckX = -1;
+    lastCheckY = -1;
     
- 
-    for (int iii = 0; iii < C * Multi_size; iii++)
+    for (int iii = 0; iii < C ; iii+=3.)
     {
         
         X_pixel = iii * X / C + bx;
         Y_pixel = iii * Y / C + by;
 
-        SetPixel(window.context, X_pixel, Y_pixel, RGB(255, 255, 252));
-        Circle(bx, by, ball.rad, X_pixel, Y_pixel);
-        for (int i = 0; i < horizont; i++)
+        float a1 = atan2(Y, X);
+        float a90 = 90 * M_PI / 180.0;
+
+        for (float i = a1 - a90; i < a1 + a90; i += (2 * a90) / 10.)
+        {
+
+            float x1 = ball.rad * cos(i) + X_pixel;
+            float y1 = ball.rad * sin(i) + Y_pixel;
+
+            SetPixel(window.context, x1, y1, RGB(255, 225, 225));
+           
+            if (cb(x1, y1, bx, by, X, Y, iii,C))
             {
-                for (int ii = 0; ii < vertical; ii++)
-                {
-                    if (walls[i][ii].active &&
-                        X_pixel > walls[i][ii].x &&
-                        X_pixel < walls[i][ii].x + walls[i][ii].width &&
-                        Y_pixel > walls[i][ii].y &&
-                        Y_pixel < walls[i][ii].y + walls[i][ii].height
-                        )
-                    {
-                        int minX = min(X_pixel - walls[i][ii].x, walls[i][ii].x + walls[i][ii].width - X_pixel);
-                        int minY = min(Y_pixel - walls[i][ii].y, walls[i][ii].y + walls[i][ii].height - Y_pixel);
-
-                        
-                        if (minX < minY)
-                        {
-                            bx -= -(X_pixel - bx)*2;
-                            X *= -1;     
-                            //ball.dx *= -1;
-                        }
-                        else
-                        {
-                             by -= -(Y_pixel - by)*2;
-                             Y *= -1;
-                             // ball.dy *= -1;
-                        }
-                        
-                    } 
-
-                }
+                break;
             }
-
+                
+        }
     }
     
 }
@@ -470,8 +451,10 @@ void ProcessBall()
     if (game.action)
     {
         //если игра в активном режиме - перемещаем шарик
+
         ball.x += ball.dx * ball.speed;
         ball.y += ball.dy * ball.speed;
+
     }
     else
     {
