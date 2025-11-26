@@ -195,7 +195,7 @@ void ProcessInput()
     }
 }
 
-void ShowBitmap(HDC hDC, int x, int y, int x1, int y1, HBITMAP hBitmapBall, bool alpha = false)
+void ShowBitmap(HDC hDC, int x, int y, int X_pixel2, int Y_pixel2, HBITMAP hBitmapBall, bool alpha = false)
 {
     HBITMAP hbm, hOldbm;
     HDC hMemDC;
@@ -210,11 +210,11 @@ void ShowBitmap(HDC hDC, int x, int y, int x1, int y1, HBITMAP hBitmapBall, bool
 
         if (alpha)
         {
-            TransparentBlt(window.context, x, y, x1, y1, hMemDC, 0, 0, x1, y1, RGB(0, 0, 0));//все пиксели черного цвета будут интепретированы как прозрачные
+            TransparentBlt(window.context, x, y, X_pixel2, Y_pixel2, hMemDC, 0, 0, X_pixel2, Y_pixel2, RGB(0, 0, 0));//все пиксели черного цвета будут интепретированы как прозрачные
         }
         else
         {
-            StretchBlt(hDC, x, y, x1, y1, hMemDC, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY); // Рисуем изображение bitmap
+            StretchBlt(hDC, x, y, X_pixel2, Y_pixel2, hMemDC, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY); // Рисуем изображение bitmap
         }
 
         SelectObject(hMemDC, hOldbm);// Восстанавливаем контекст памяти
@@ -256,18 +256,96 @@ void CheckWalls()
     }
 }
 
+void InitTransformData(int bx, int by, int X_pixel2, int Y_pixel2)
+{
+    int dx = abs(X_pixel2 - bx);
+    int dy = abs(Y_pixel2 - by);
+
+    int signX;
+    int signY;
+
+    if (bx < X_pixel2)
+       signX = 1;
+    else
+        signX = -1;
+
+    if (by < Y_pixel2)
+        signY = 1;
+    else
+        signY = -1;
+
+    int direction = dx - dy;
+
+    bool StatusX = false;
+    bool StatusY = false;
+
+    while (true)
+    {
+        SetPixel(window.context, bx, by, RGB(255, 0, 0)); /// отрисовки линии
+
+        if (direction > -dy)
+        {
+            if (bx != X_pixel2)
+            {
+                direction -= dy; /// изменение направления по y
+                bx += signX; /// применения сдвига пикселя на x
+            }
+        }
+        if (direction < dx)
+        {
+            if (by != Y_pixel2)
+            {
+                direction += dx; /// изменение направления по x
+                by += signY; /// применения сдвига пикселя на y
+            }
+        }
+
+        float X = ball.dx * ball.speed;
+        float Y = ball.dy * ball.speed;
+
+        float a1 = atan2(Y, X);
+        float a90 = 90 * M_PI / 180.0;
+
+        for (float i = a1 - a90; i < a1 + a90; i += (2 * a90) / 10.)
+        {
+
+            float X_pixel2 = ball.rad * cos(i) + bx;
+            float Y_pixel2 = ball.rad * sin(i) + by;
+
+
+            SetPixel(window.context, X_pixel2, Y_pixel2, RGB(255, 225, 225));
+
+           /* if (cb(X_pixel2, Y_pixel2, bx, by, X, Y, iii, C))
+            {
+                break;
+            }*/
+
+        }
+
+
+        /// проверка на завершение отрисовки линии
+        if (bx == X_pixel2)
+            StatusX = true;
+        if (by == Y_pixel2)
+            StatusY = true;
+
+        if (StatusX && StatusY)
+            break;
+    }
+}
+
 
 void Paint_line(
     float start_x, float start_y,
     float iterator,
-    float x1,  float y1, 
+    float X_pixel2,  float Y_pixel2, 
     float x2, float y2, 
     float *Poxel_x, 
     float *Poxel_y, 
     int R , int G , int B)
 {
-    float dx = x2 - x1;
-    float dy = y2 - y1;
+    float dx = x2 - X_pixel2;
+    float dy = y2 - Y_pixel2;
     float C;
     C = sqrt(pow(dx, 2) + pow(dy, 2));
     
@@ -278,8 +356,7 @@ void Paint_line(
 
 int lastCheckX;
 int lastCheckY;
-
-bool cb(float &x1, float &y1, float &bx , float &by,float &X , float &Y,int iii,int C)
+bool cb(float &X_pixel2, float &Y_pixel2, float &bx , float &by,float &X , float &Y,int iii,int C)
 {
     for (int i = 0; i < horizont; i++)
     {
@@ -290,30 +367,30 @@ bool cb(float &x1, float &y1, float &bx , float &by,float &X , float &Y,int iii,
             {
 
                 if (walls[i][ii].active &&
-                    x1 > walls[i][ii].x &&
-                    x1 < walls[i][ii].x + walls[i][ii].width &&
-                    y1 > walls[i][ii].y &&
-                    y1 < walls[i][ii].y + walls[i][ii].height
+                    X_pixel2 > walls[i][ii].x &&
+                    X_pixel2 < walls[i][ii].x + walls[i][ii].width &&
+                    Y_pixel2 > walls[i][ii].y &&
+                    Y_pixel2 < walls[i][ii].y + walls[i][ii].height
                     )
                 {
-                    int left = x1 - walls[i][ii].x;
-                    int right = walls[i][ii].x + walls[i][ii].width - x1;
+                    int left = X_pixel2 - walls[i][ii].x;
+                    int right = walls[i][ii].x + walls[i][ii].width - X_pixel2;
                     int minX = min(left, right);
 
-                    int top = y1 - walls[i][ii].y;
-                    int bottom = walls[i][ii].y + walls[i][ii].height - y1;
+                    int top = Y_pixel2 - walls[i][ii].y;
+                    int bottom = walls[i][ii].y + walls[i][ii].height - Y_pixel2;
                     int minY = min(top, bottom);
 
                     if (minX < minY)
                     {
-                        bx -= -(x1 - bx) * 2;
+                        bx -= -(X_pixel2 - bx) * 2;
                         X *= -1;
                    
                         //ball.dx *= -1;
                     }
                     else
                     {
-                        by -= -(y1 - by) * 2;
+                        by -= -(Y_pixel2 - by) * 2;
                         Y *= -1;
                        
                         //ball.dy *= -1;
@@ -345,6 +422,7 @@ bool cb(float &x1, float &y1, float &bx , float &by,float &X , float &Y,int iii,
     return false;
 }
 
+
 void CheckBricks()
 {
     float bx = ball.x;
@@ -352,17 +430,19 @@ void CheckBricks()
     float X = ball.dx * ball.speed;
     float Y = ball.dy * ball.speed;
     float C = sqrt(X * X + Y * Y);
-    float X_pixel;
-    float Y_pixel;
+
+    float X_pixel2 = 100 * X / C + bx;
+    float Y_pixel2 = 100 * Y / C + by;
+
+    InitTransformData(bx, by, X_pixel2, Y_pixel2);
 
     lastCheckX = -1;
     lastCheckY = -1;
     
-    for (int iii = 0; iii < C ; iii+=3.)
+    for (int iii = 0; iii < C; iii +=1)
     {
-        
-        X_pixel = iii * X / C + bx;
-        Y_pixel = iii * Y / C + by;
+        float X_pixel = iii * X / C + bx;
+        float Y_pixel = iii * Y / C + by;
 
         float a1 = atan2(Y, X);
         float a90 = 90 * M_PI / 180.0;
@@ -370,12 +450,12 @@ void CheckBricks()
         for (float i = a1 - a90; i < a1 + a90; i += (2 * a90) / 10.)
         {
 
-            float x1 = ball.rad * cos(i) + X_pixel;
-            float y1 = ball.rad * sin(i) + Y_pixel;
+            float X_pixel2 = ball.rad * cos(i) + X_pixel;
+            float Y_pixel2 = ball.rad * sin(i) + Y_pixel;
 
-            SetPixel(window.context, x1, y1, RGB(255, 225, 225));
+            SetPixel(window.context, X_pixel2, Y_pixel2, RGB(255, 225, 225));
            
-            if (cb(x1, y1, bx, by, X, Y, iii,C))
+            if (cb(X_pixel2, Y_pixel2, bx, by, X, Y, iii,C))
             {
                 break;
             }
